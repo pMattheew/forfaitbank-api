@@ -1,5 +1,7 @@
 export class Package {
-    operationId: number;
+    id?: number;
+    grandpaId?: number;
+    operationId?: number;
     billType: number;
     billQuantity: number;
     status: string;

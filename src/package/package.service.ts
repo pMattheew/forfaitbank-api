@@ -1,8 +1,7 @@
 import { CreateManyPackagesDto } from "./dto/create-many-packages.dto";
 import { PrismaService } from "./../prisma/prisma.service";
 import { Injectable } from "@nestjs/common";
-import { CreatePackageDto } from "./dto/create-package.dto";
-import { CreateNestedPackageDto } from "./dto/create-nested-package.dto";
+import { CreatePackageDto, CreateNestedPackageDto } from "./dto/create-package.dto";
 
 @Injectable()
 export class PackageService {
@@ -10,19 +9,16 @@ export class PackageService {
    private readonly MAX_BILL_QUANTITY = 50;
 
    async createMany(dto: CreateManyPackagesDto) {
-      let dtoArray = this.createDtoArray(dto);
-
-      const pkgArray = this.prisma.package.createMany({
-         data: [...dtoArray],
-      });
-
-      return pkgArray;
+      const pkgCount = this.prisma.package.createMany()
    }
 
    create(dto: CreatePackageDto) {
+      const status = dto.billQuantity < this.MAX_BILL_QUANTITY ? 'opened' : 'closed'
+
       const pkg = this.prisma.package.create({
          data: {
             ...dto,
+            status,
             color: this.generateRandomHexColor(),
          },
       });
@@ -48,88 +44,39 @@ export class PackageService {
       });
    }
 
-   createDtoArray(dto: CreateManyPackagesDto): CreatePackageDto[] {
-      const MAX_BILL_QUANTITY = 50;
-      let dtoArray: CreatePackageDto[] = [];
-      let totalClosedPackages = Math.round(dto.value / dto.billType);
-      let remainingBills = Math.round(dto.value % dto.billType);
-
-      let pkg: CreatePackageDto = {
-         billType: dto.billType,
-         billQuantity: MAX_BILL_QUANTITY,
-         operationId: dto.operationId,
-         status: "closed",
-         color: this.generateRandomHexColor(),
-      };
-
-      for (let i = totalClosedPackages; i > 0; i--) {
-         dtoArray.push({
-            ...pkg,
-            color: this.generateRandomHexColor(),
-         });
-      }
-
-      // generate remaining package
-      if (remainingBills > 0) {
-         pkg.billQuantity = remainingBills;
-         pkg.status = "opened";
-         dtoArray.push({
-            ...pkg,
-            color: this.generateRandomHexColor(),
-         });
-      }
-
-      return dtoArray;
-   }
-
    nestedCreateMany(args: { value: number; billType: number }) {
+      const packages: CreateNestedPackageDto[] = [];
       const remainingBills = Math.round(args.value % args.billType);
-      let totalClosedPackages = Math.round(args.value / args.billType);
-      let packages: CreateNestedPackageDto[] = [];
+      let closedPackages = Math.round(args.value / args.billType);
 
-      while (totalClosedPackages > 0) {
-         packages.push(this.generateClosedPackage({ billType: args.billType }));
-         totalClosedPackages--;
+      while (closedPackages) {
+         const closedPackage = {
+            billQuantity: this.MAX_BILL_QUANTITY,
+            status: "closed",
+            color: this.generateRandomHexColor(),
+            billType: args.billType
+         }
+
+         packages.push(closedPackage);
+         closedPackages--;
       }
 
       if (remainingBills) {
-         packages.push(
-            this.generateOpenedPackage({
-               billType: args.billType,
-               billQuantity: remainingBills,
-            })
-         );
+         const openedPackage = {
+            billQuantity: remainingBills,
+            status: "opened",
+            color: this.generateRandomHexColor(),
+            billType: args.billType
+         }
+
+         packages.push(openedPackage)
       }
 
       return packages;
    }
 
-   generateClosedPackage(
-      dto: Partial<CreatePackageDto>
-   ): CreatePackageDto | CreateNestedPackageDto {
-      return {
-         billType: dto.billType,
-         billQuantity: this.MAX_BILL_QUANTITY,
-         operationId: dto.operationId,
-         status: "closed",
-         color: this.generateRandomHexColor(),
-      };
-   }
-
-   generateOpenedPackage(
-      dto: Partial<CreatePackageDto>
-   ): CreatePackageDto | CreateNestedPackageDto {
-      return {
-         billType: dto.billType,
-         billQuantity: dto.billQuantity,
-         operationId: dto.operationId,
-         status: "opened",
-         color: this.generateRandomHexColor(),
-      };
-   }
-
-   private generateRandomHexColor(): string {
-      let n = (Math.random() * 0xfffff * 1000000).toString(16);
+   generateRandomHexColor(): string {
+      const n = (Math.random() * 0xfffff * 1000000).toString(16);
       return "#" + n.slice(0, 6);
    }
 }

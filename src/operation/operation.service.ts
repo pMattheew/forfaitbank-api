@@ -1,4 +1,4 @@
-import { CreateNestedPackageDto } from "./../package/dto/create-nested-package.dto";
+import { CreateNestedPackageDto } from "./../package/dto/create-package.dto";
 import { CreateSubOperationDto } from "./dto/create-sub-operation.dto";
 import { PackageService } from "./../package/package.service";
 import { ForbiddenException, NotFoundException } from "@nestjs/common";
