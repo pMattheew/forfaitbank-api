@@ -30,8 +30,7 @@
     "posttest": "npm run db:test:rm",
     "posttest:e2e": "npm run posttest",
     "posttest:db:e2e": "npm run posttest",
-    "ci": "npm run pretest && npm run env:test -- jest && npm run posttest",
-    "ci:e2e": "npm run pretest && npm run env:test -- jest app.e2e-spec.ts --no-cache --config ./test/jest-e2e.json && npm run posttest",
+    "ci:e2e": "npm run pretest && npm run env:test -- jest app.e2e-spec.ts --no-cache --config ./test/jest-e2e.json && npm run env:test -- jest && npm run posttest",
     "ci:db:e2e": "npm run npm run db:test:up && npm run env:test -- jest database.e2e-spec.ts --no-cache --config ./test/jest-e2e.json && npm run db:test:rm"
   },
   "dependencies": {
