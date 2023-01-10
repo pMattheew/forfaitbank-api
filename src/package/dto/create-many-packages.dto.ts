@@ -12,5 +12,5 @@ export class CreateManyPackagesDto {
 
    @IsInt()
    @IsNotEmpty()
-   operationId: number;
+   grandpaId: number;
 }
